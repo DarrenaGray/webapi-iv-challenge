@@ -13,10 +13,10 @@ function capitalized() {
         } else {
             res.status(400).json({
                 message: "Name needs to be capitalized."
-            })
-        }
-    }
-}
+            });
+        };
+    };
+};
 
 router.get('/', (req, res) => {
     Users
@@ -49,23 +49,29 @@ router.get('/:id', (req, res) => {
             res.status(500).json({
                 error: err,
                 message: "The user information could not be retrieved."
-            })
+            });
         });
 });
 
 router.post('/', capitalized(), (req, res) => {
-    const userInfo = req.body;
-    Users
-        .insert(userInfo)
-        .then(user => {
-            res.status(201).json(user);
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err,
-                message: "This name already exists."
+    if ( req.body.name && req.body.name !== "") {
+        const userInfo = req.body;
+        Users
+            .insert(userInfo)
+            .then(user => {
+                res.status(201).json(user);
             })
+            .catch(err => {
+                res.status(500).json({
+                    error: err,
+                    message: "This name already exists."
+                })
+            });
+    } else {
+        res.status(400).json({
+            error: "Must include name."
         });
+    };
 });
 
 router.delete('/:id', (req, res) => {
@@ -92,19 +98,31 @@ router.delete('/:id', (req, res) => {
 });
 
 router.put('/:id', capitalized(), (req, res) => {
-    const userId = req.params.id;
-    const userInfo = req.body;
-    Users
-        .update(userId, userInfo)
-        .then(updatedUser => {
-            res.status(200).json(updatedUser);
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err,
-                message: "The user could not be updated."
+    if (req.body.name && req.body.name !== "") {
+        const userId = req.params.id;
+        const userInfo = req.body;
+        Users
+            .update(userId, userInfo)
+            .then(updatedUser => {
+                if(updatedUser) {
+                    res.status(200).json(updatedUser);
+                } else {
+                    res.status(404).json({
+                        message: "The user with the specified ID does not exist."
+                    })
+                }
+            })
+            .catch(err => {
+                res.status(500).json({
+                    error: err,
+                    message: "The user could not be updated."
+                });
             });
-        });
+    } else {
+        res.status(400).json({
+            error: "Must include name."
+        })
+    }
 });
 
 router.get('/:id/posts', (req, res) => {
@@ -112,12 +130,18 @@ router.get('/:id/posts', (req, res) => {
     Users
         .getUserPosts(posts)
         .then(post => {
-            res.status(200).json(post);
+            if (post.length !== 0) {
+                res.status(200).json(post);
+            } else {
+                res.status(404).json({
+                    message: "The user with the specified ID does not exist."
+                });
+            }
         })
         .catch(err => {
             res.status(500).json({
                 error: err,
-                message: "Error getting posts for this user."
+                message: "The user information could not be retrieved."
             });
         });
 });
