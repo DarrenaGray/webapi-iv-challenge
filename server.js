@@ -13,7 +13,7 @@ server.use(helmet());
 server.use(morgan('dev'));
 
 server.get('/', (req, res) => {
-    res.send('Ready to go');
+    res.send({messageOfTheDay: process.env.MOTD});
 });
 
 server.use('/api/users', usersRouter);
